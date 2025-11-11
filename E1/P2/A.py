@@ -40,10 +40,11 @@ for p in range(0, 9):
         f'{MSE(model,       validPolyDF, validDF['y'])}\t|',
         f'{MSE(model,       testPolyDF, testDF['y'])}\t|',
         f'{MSE(trvaModel,   testPolyDF, testDF['y'])}\t|',
-        f'{np.mean(cross_validate(
+        f'{-np.mean(cross_validate(
             M,
             X,
             trvaDF['y'],
-            cv=cv
+            cv=cv,
+            scoring='neg_mean_squared_error'
         )['test_score'])}\t|'
     )
