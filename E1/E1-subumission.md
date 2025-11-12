@@ -335,10 +335,104 @@ plt.plot(x, testError(x/100), label='Testing error')
 plt.plot(x, trainError(x/100), label='Training error')
 
 plt.xlabel('Flexibility')
-plt.ylabel('Error rate')
 frame1 = plt.gca()
 frame1.axes.xaxis.set_ticks([])
 frame1.axes.yaxis.set_ticks([])
+plt.legend()
+plt.show()
+```
+
+## Task b
+### I
+| Degree        | Irreducible           | BiasSq                | Variance              | Total                 | MSE                   |
+|---------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|
+| 0             | 0.15594178202375228   | 2.1764076878759457    | 0.4971790707847389    | 2.829528540684437     | 2.7927996089467517    |
+| 1             | 0.15594178202375228   | 1.809202822939915     | 0.2775877485072016    | 2.2427323534708687    | 2.222510879197839     |
+| 2             | 0.15594178202375228   | 3.5104445052129306e-05        | 0.04871824794478795   | 0.20469513441359238   | 0.2066739074406727    |
+| 3             | 0.15594178202375228   | 0.00025143047706760577        | 0.06456593948906914   | 0.22075915198988902   | 0.2172436866603704    |
+| 4             | 0.15594178202375228   | 4.540883515561021e-05 | 0.11136663907196297   | 0.26735382993087087   | 0.2746233883873589    |
+| 5             | 0.15594178202375228   | 0.00016527997843616296        | 0.2989828961923012    | 0.4550899581944896    | 0.4740604678445695    |
+| 6             | 0.15594178202375228   | 0.000434459400279319  | 1.5507197764967027    | 1.7070960179207342    | 1.7176801096466052    |
+
+### II
+![plotted loss, irreducible, bias and variance](../static/E1P3B.png)
+
+### III
+The terms do behave as in task a, but the increase/decrese amount varies from run to run (especially for the bias). Total is really close to the MSE, but not quite. This is becasue the expected irreducible is not constant across the training sets, which affects the calculation of 'total'.
+
+### code
+The outer loop creates the 1000 data sets while the inner loop trains the polynomial regression functions. This means I end up with 7000 rows with the pattern: `degree`, `f(0)`, `y0`, `f^(0)`.
+In the last loop the terms are calculated for each polynomial degree using the formula provided in the task: ![squared loss formula](../static/squared_loss_formula.png)
+The terms are then plotted to the graph with the degrees as x.
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from ISLP.models import (ModelSpec as MS, poly)
+import pandas as pd
+from math import sqrt
+
+N = 10
+
+def f(x):
+    return -2 -x + 0.5*x**2
+
+
+
+print(f'| Degree\t| Irreducible\t\t| BiasSq\t\t| Variance\t\t| Total\t\t\t| MSE\t\t\t|')
+print('|---------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|')
+
+degreesDF = pd.DataFrame({'degree':[], 'f(0)':[], 'y0':[], 'f^(0)':[] })
+for iteration in range(0, 1000):
+    x = np.random.uniform(-3, 3, size=N)
+    epsilon = np.random.normal(0, 0.4, size=N)
+    y = f(x) + epsilon
+    D = pd.DataFrame({ 'x': x, 'y': y })
+    zeroDF = pd.DataFrame({'x': [0, 0], 'y': [f(0) + np.random.normal(0, 0.4), 0]})
+    for p in range(0, 7):
+        if p == 0:
+            trainPolyDF = pd.DataFrame({ 'const': np.ones(len(D)) })
+            zeroPolyDF = pd.DataFrame({ 'const': np.ones(len(zeroDF)) })
+        else:
+            spec = MS([poly('x', degree=p, raw=True)])
+            trainPolyDF = spec.fit_transform(D)
+            zeroPolyDF = spec.transform(zeroDF)
+            
+        model = sm.OLS(D['y'], trainPolyDF).fit()
+
+        degreesDF = pd.concat(
+            [
+                degreesDF,
+                pd.DataFrame([[p, f(0), zeroDF['y'][0], model.predict(zeroPolyDF)[0]]], columns=degreesDF.columns)
+            ], 
+            ignore_index=True
+        )
+
+results = pd.DataFrame({'degree': [], 'irreducible error': [], 'bias term': [], 'variance term': [], 'squared loss': []})
+for p in range(0, 7):
+    df = degreesDF[degreesDF['degree'] == p]
+    irreducible = np.mean((df['y0'] - df['f(0)'])**2)
+    biasSq = (np.mean(df['f^(0)']) - f(0))**2
+    variance = np.mean((df['f^(0)'] - np.mean(df['f^(0)']))**2)
+    mse = np.mean((df['y0'] - df['f^(0)'])**2)
+    total = irreducible + biasSq + variance
+
+    print(f'| {p}\t\t|', f'{irreducible}\t|', f'{biasSq}\t|', f'{variance}\t|', f'{total}\t|', f'{mse}\t|')
+    results = pd.concat(
+        [
+            results,
+            pd.DataFrame([[p, irreducible, biasSq, variance, total]], columns=results.columns)
+        ], 
+        ignore_index=True
+    )
+
+plt.plot(results['degree'], results['squared loss'], label=f'squared loss')
+plt.plot(results['degree'], results['irreducible error'], label=f'irreducible error')
+plt.plot(results['degree'], results['bias term'], label=f'bias term')
+plt.plot(results['degree'], results['variance term'], label=f'variance term')
+
+plt.xlabel('Degree')
+
 plt.legend()
 plt.show()
 ```

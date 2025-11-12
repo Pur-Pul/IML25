@@ -25,7 +25,6 @@ plt.plot(x, variance(x/100), label='Variance')
 plt.plot(x, irreducible(x/100), label='Irreducible error')
 
 plt.xlabel('Flexibility')
-plt.ylabel('Error rate')
 frame1 = plt.gca()
 frame1.axes.xaxis.set_ticks([])
 frame1.axes.yaxis.set_ticks([])
