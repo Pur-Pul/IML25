@@ -311,6 +311,8 @@ print(
 #### How can you improve the performance of these regressors (on this training set)?
 - For RF and GBR the hyperparameters can be adjusted to reduce overfitting. This does require some trial and error for example by limiting the max depth on the reandom forest regressor to 5 I was able to bring its training loss closer to the testing loss, but at the same time the testing loss increased slightly. The goal is to bring the training loss closer to the testing loss without while keeping the testing loss low.
 
+# Problem 3
+
 ## Task a
 ### Traing error and test error
 - In the plot below we see that when flexibility increases training error decreases. The more flexibile the model the better it fits the training data. But while the testing error initially decreses with the flexibility it start going up after a while. This is because the model start fitting to the noise in the training data. 
@@ -434,5 +436,144 @@ plt.plot(results['degree'], results['variance term'], label=f'variance term')
 plt.xlabel('Degree')
 
 plt.legend()
+plt.show()
+```
+
+# Problem 5
+## Task a
+Dataset d0:
+| coeff         | Term estimate         | Standard error        | P-value               |
+|---------------|-----------------------|-----------------------|-----------------------|
+| intercept     | 3.000090909090908     | 1.1247467908086437    |0.025734051399162457   |
+| Slope         | 0.5000909090909091    | 0.11790550059563408   |0.002169628873078792   |
+R-squared: 0.666542459508775
+
+
+Dataset d1:
+| coeff         | Term estimate         | Standard error        | P-value               |
+|---------------|-----------------------|-----------------------|-----------------------|
+| intercept     | 3.0009090909090905    | 1.125302416245227     |0.025758941030781062   |
+| Slope         | 0.5   | 0.1179637459676408    |0.0021788162369108005  |
+R-squared: 0.6662420337274844
+
+
+Dataset d2:
+| coeff         | Term estimate         | Standard error        | P-value               |
+|---------------|-----------------------|-----------------------|-----------------------|
+| intercept     | 3.0024545454545444    | 1.1244812296399933    |0.025619108839500818   |
+| Slope         | 0.49972727272727263   | 0.11787766222100227   |0.0021763052792280256  |
+R-squared: 0.6663240410665593
+
+
+Dataset d3:
+| coeff         | Term estimate         | Standard error        | P-value               |
+|---------------|-----------------------|-----------------------|-----------------------|
+| intercept     | 3.001727272727269     | 1.1239210718540587    |0.02559042520075871    |
+| Slope         | 0.49990909090909097   | 0.11781894172968554   |0.00216460234719722    |
+R-squared: 0.6667072568984652
+
+**The slope term may be positive (or negative) with high confidence. Can you safely conclude that when x
+increases (or decreases), y tends to increase (and vice versa)?**
+- Although this holds for the linear regressor functions, this may note be true for the true functions of the datasets. If we take a look at the datasets mapped out on a plot:
+![d1, d2, d3, d4 and linear regression](../static/E1P5A.png)
+we can see that not all of the datasets fit well to a linear function. For example d2 definetly curves and would be better fitted to a higher degree polynomial regression. y increases with x until about x=11 and then start decreasing.
+
+The estimated terms, errors and pvalues are extracted through the `.params` parameter on the OLS model.
+R-squared is extracted through `.rsquared` parameter on the OLS model.
+### Code
+```python
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from ISLP.models import (ModelSpec as MS, poly, sklearn_sm, summarize)
+
+dfs = [
+    pd.read_csv("data/d1.csv"),
+    pd.read_csv("data/d2.csv"),
+    pd.read_csv("data/d3.csv"),
+    pd.read_csv("data/d4.csv")
+]
+
+for i, df in enumerate(dfs):
+    x = df['x']
+    x = sm.add_constant(x)
+    results = sm.OLS(df['y'], x).fit()
+    print(summarize(results))
+    print(f"Dataset d{i}:")
+    print(f'| coeff\t\t| Term estimate\t\t| Standard error\t| P-value\t\t|')
+    print(f'|---------------|-----------------------|-----------------------|-----------------------|')
+    print(f'| intercept\t| {results.params['const']}\t| {results.bse['const']}\t|{results.pvalues['const']}\t|')
+    print(f'| Slope\t\t| {results.params['x']}\t| {results.bse['x']}\t|{results.pvalues['x']}\t|')
+    print("R-squared:", results.rsquared)
+    print('\n')
+    plt.subplot(2,2,i+1)
+    plt.scatter(df['x'], df['y'])
+    plt.plot(df['x'], results.predict(x), color='red')
+    plt.title(f'd{i+1}')
+plt.show()
+```
+
+## Task b
+This task uses the same code as the last one to generate the plot.
+![d1, d2, d3, d4 and linear regression](../static/E1P5A.png)
+We can see that the slope is approximately the same for each model eventhough the data differs quite a lot. 
+
+## Task c
+Non-linearity, Outliers and high leverage points can be observed. 
+- The non-linearity can be detected with residual plots as patterns in the distribution of points. The d2 residual plot below shows a pattern, which indecates that the d2 dataset is not linear. 
+- Outliers can also be detected with residual plots, but it is easier with studentized resiudal plots. In the d3 studentized residual the red point has been identified as an outlier, due to it having a studentized residual larger than 3. 
+- high leverage points can be detected with the leverage statistic. In the d4 leverage statistic plot the red poitn has been identified as a high leverage point. All the other points have the same leverage statistic, which means thay are stacked in the plot. The red point has a larger leverage statistic than the average and has therefore been identifed as a potential high leverage point.
+![d2, d3, d4 problems](../static/E1P5C.png)
+
+### code
+```python
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from ISLP.models import (ModelSpec as MS, poly, sklearn_sm, summarize)
+
+dfs = [
+    pd.read_csv("data/d2.csv"),
+    pd.read_csv("data/d3.csv"),
+    pd.read_csv("data/d4.csv")
+]
+
+
+for i, df in enumerate(dfs):
+    
+    x = df['x']
+    x = sm.add_constant(x)
+    results = sm.OLS(df['y'], x).fit()
+
+    plt.subplot(3,1,i+1)
+    if i == 0:
+        plt.title(f'd2 residual')
+        residual = pd.DataFrame({
+            'x': df['x'],
+            'y': (df['y'] - results.predict(x))
+        })
+        plt.scatter(residual['x'], residual['y'], color='blue')
+    
+    elif i == 1:
+        plt.title(f'd3 studentized residual')
+        studResidual = pd.DataFrame({
+            'x': df['x'],
+            'y': (df['y'] - results.predict(x))/results.get_prediction(x).summary_frame()['mean_se']
+        })
+        outliers = studResidual[abs(studResidual['y']) > 3]
+        plt.scatter(studResidual['x'], studResidual['y'], color='blue')
+        plt.scatter(outliers['x'], outliers['y'], color='red')
+    elif i == 2:
+        plt.title(f'd4 leverage stats')
+        influence = results.get_influence()
+        leverage = influence.hat_matrix_diag
+        levDF = pd.DataFrame({'x': df['x'], 'y': leverage})
+        highLevs = levDF[levDF['y'] > np.mean(leverage)]
+        
+        plt.scatter(levDF['x'], levDF['y'])
+        plt.scatter(highLevs['x'], highLevs['y'], color='red')
+    
 plt.show()
 ```
