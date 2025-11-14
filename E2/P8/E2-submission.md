@@ -86,6 +86,10 @@ Test accuracy: 0.8933333333333333
 ### Plot
 ![Probability plot](../../static/E2P8B.png)
 
+- The code works the same as in task a, but `GLM` is used instead of `Logit`.
+- The model is fitted with the `fit_regularized` function with the parameters `alpha=0.1` and `L1_wt=1.0`.
+- `L1_wt=1.0` makes sure that lasso fit is used instead of ridge fit.
+- `alpha=0.1` was tweaked until one coefficient (the intercept) became 0.
 
 ### code
 ```python
@@ -148,5 +152,5 @@ The problem is that there is a a quasi-complete separation in some of the variab
 |-----------|----------------------|
 | Adelie    |        33 - 44       |
 | NotAdelie |        43 - 60       |
-There is only one observed Adelie with a bill length of 44mm
+This means the bill length can predict the species perfectly except for the range 43 - 44. This casues the maximum likelihood estimation to fail for the variable.
 
