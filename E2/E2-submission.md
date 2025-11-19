@@ -213,3 +213,137 @@ $$
 $$
 
 We can see that the quadratic coefficient is $\frac{1}{\sigma^2_1} - \frac{1}{\sigma^2_2}$. If we assume that $\sigma_1 \neq \sigma_2$ then the quadratic coefficient is non-zero, which means that the decision boundary equation is quadratic and not linear.
+
+# Problem 10
+## Task a
+### Output
+Adelie
+   stat  bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g
+0  mean        38.12400       18.33600         188.880000  3576.000000
+1   std         2.72533        1.17979           6.192382   452.022123
+prob: 0.33766233766233766
+
+not Adelie
+   stat  bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g
+0  mean       47.818000      15.890000         211.300000  4657.000000
+1   std        3.563296       1.945688          11.674331   779.615931
+prob: 0.6623376623376623
+### Code
+```python
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from math import ceil, sqrt, pi, exp
+
+trainDF = pd.read_csv('data/penguins_train.csv')
+testDF = pd.read_csv('data/penguins_test.csv')
+
+#Task a
+def getAttributeStats(df, column, y):
+    classDF = df[df[column] == y].drop(columns=[column])
+    stats = pd.DataFrame({'stat': ['mean', 'std']})
+    for attr in classDF.columns.values:
+        stats[attr] = [np.mean(classDF[attr]), np.std(classDF[attr])] 
+        
+    return stats
+
+def laplaceSmooth(df, column, y):
+    classDF = df[df[column] == y].drop(columns=[column])
+    return (len(classDF) + 1) / (len(df) + 2)
+
+print('Adelie')
+print(getAttributeStats(trainDF, 'species', 'Adelie'))
+
+print('prob:', laplaceSmooth(trainDF, 'species', 'Adelie'))
+
+print()
+print('not Adelie')
+print(getAttributeStats(trainDF, 'species', 'notAdelie'))
+
+print('prob:', laplaceSmooth(trainDF, 'species', 'notAdelie'))
+print()
+```
+
+## Task b
+The 4 features in data (bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g) are quantitative, which means that a normal distribution can be assumed. The density function becomes:
+$$
+f_k(x_j)=\frac{1}{\sqrt{2\pi}\sigma_{jk}}\exp(-\frac{1}{2\sigma_{jk}^2}(x-\mu_{jk})^2)
+$$
+where $\sigma_k$, $\sigma_k^2$ and $\mu_k$ are the standard deviation, variance and mean for the jth feature in the kth class.
+
+The formula for the posterior probability is:
+$$
+\Pr(Y=k|X=x)=\frac{\pi_k \times f_{k1}(x_1) \times f_{k2}(x_2) \times ... \times f_{kp}(x_p) }{\sum_{l=1}^K \pi_l \times f_{l1}(x_1) \times f_{l2}(x_2) \times ... \times f_{lp}(x_p)}
+$$
+
+The the density function can be plugged into the posterior probability function, which results in:
+$$
+\Pr(Y=k|X=x)=\frac{\pi_k \times \prod_{j=1}^p \frac{1}{\sqrt{2\pi}\sigma_{jk}}\exp(-\frac{1}{2\sigma_{jk}^2}(x-\mu_{jk})^2)}{\sum_{l=1}^K \pi_l \times \prod_{j=1}^p \frac{1}{\sqrt{2\pi}\sigma_{jl}}\exp(-\frac{1}{2\sigma_{jl}^2}(x-\mu_{jl})^2)}
+$$
+
+## Task c
+### Code
+The following code continues from the code in task a.
+```python
+#Task c
+def density(x, mean, std):
+    return exp(-((x - mean) ** 2) / (2 * std**2)) / (sqrt(2*pi) * std)
+
+def postProb(df, column, y, X):
+    numerator = laplaceSmooth(df, column, y)
+    for attr in X.columns.values:
+        stats = getAttributeStats(df, column, y)
+        mean = stats[stats['stat'] == 'mean'][attr].iloc[0]
+        std = stats[stats['stat'] == 'std'][attr].iloc[0]
+        x = X[attr].iloc[0]
+
+        numerator *= density(x, mean, std)
+    
+    classes = df[column].unique()
+    denominator = 0
+    for c in classes:
+        product = laplaceSmooth(df, column, c)
+        stats = getAttributeStats(df, column, c)
+        for attr in X.columns.values:
+            mean = stats[stats['stat'] == 'mean'][attr].iloc[0]
+            std = stats[stats['stat'] == 'std'][attr].iloc[0]
+            x = X[attr].iloc[0]
+            product *= density(x, mean, std)
+        denominator+=product
+    
+    return numerator / denominator
+
+X = testDF.drop(columns=['species'])
+Y = testDF['species']
+preds = []
+for i in range(0,len(testDF)):
+    prob = postProb(trainDF, 'species', 'Adelie', X.iloc[[i]])
+
+    preds.append('Adelie' if prob >= 0.5 else 'notAdelie')
+    if i < 3:
+        print(f'p^(y = Adelie | x_{i}) =', prob)
+print('Accuracy:', np.mean(testDF['species'].values == np.array(preds)))
+```
+
+### Output
+p^(y = Adelie | x_0) = 0.9967896646386412
+p^(y = Adelie | x_1) = 0.7953470279474658
+p^(y = Adelie | x_2) = 0.998919564529168
+Accuracy: 0.9333333333333333
+
+# Problem 11
+## Task a
+Discriminative learning is considered to be better for larger datasets while generative ones may be better when the dataset is small. This is because while discriminative learning has generally has a lower asymptotic error, generative learning reaches its asymptotic error earlier. This means that as the dataset increases, generative classifiers reach their final performance before discriminative ones do, which may mean that they are better for smaller sets.
+
+## Task b
+Two different parametric families are discussed 'Continuous inputs' and 'Discrete inputs'. The following models are chosen for $h_{Gen}$ and $h_{Dis}$ for the families:
+| Family            | $h_{Gen}$                     | $h_{Dis}$           |
+|-------------------|-------------------------------|---------------------|
+| Continuous inputs | Normal discriminant analysis  | Logistic regression |
+| Discrete inputs   | Naive Bayes                   | Logistic regression |
+
+$h_{Gen}$ is fit to optimize the joint likelyhood of the input/features $p(\textnormal{features}, \textnormal{targets})$ and labels/targets. $h_{Dis}$ is fit to either optimize the conditinal likelyhood $p(\textnormal{target} | \textnormal{features})$ or to minimize the training error.
+
+## Task c
+For discrete inputs the Naive Bayes performs better most of the time with a few exceptions where the training dataset has grown enough for logistic regression to overtake it. Continuous datasets in comparasion show more scenarios where logistic regression overtakes Naive Bayes as the training dataset grows. 
