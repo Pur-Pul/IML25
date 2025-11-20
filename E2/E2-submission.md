@@ -347,3 +347,181 @@ $h_{Gen}$ is fit to optimize the joint likelyhood of the input/features $p(\text
 
 ## Task c
 For discrete inputs the Naive Bayes performs better most of the time with a few exceptions where the training dataset has grown enough for logistic regression to overtake it. Continuous datasets in comparasion show more scenarios where logistic regression overtakes Naive Bayes as the training dataset grows. 
+
+# Problem 12
+## Task a
+Naive bayes assumes that all fetures are coniditionally independent. In the probability function:
+$$p(y=1|x_1,x_2)=\sigma(0.1-2x_1+x_2+0.2x_1x_2)$$
+there is an interaction between the features $x_1$ and $x_2$ in the form $0.2x_1x_2$. This means that they conditionally depend on each other and that the Naive Bayes asumption does not hold.
+
+## Task b
+
+### Output
+```bash
+Accuracy
+      n      NB      LR     LRi  OptimalBayes   Dummy
+0     8  0.6643  0.7903  0.7921         0.793  0.5214
+1    16  0.7635  0.7591  0.7268         0.793  0.5214
+2    32  0.7476  0.7898  0.7910         0.793  0.4786
+3    64  0.7855  0.7853  0.7884         0.793  0.5214
+4   128  0.7889  0.7857  0.7758         0.793  0.4786
+5   256  0.7919  0.7880  0.7911         0.793  0.5214
+6   512  0.7903  0.7892  0.7918         0.793  0.5214
+7  1024  0.7919  0.7913  0.7923         0.793  0.4786
+8  2048  0.7888  0.7913  0.7921         0.793  0.5214
+9  4096  0.7902  0.7911  0.7940         0.793  0.5214
+
+Perplexity
+      n        NB        LR       LRi  OptimalBayes     Dummy
+0     8  4.057557  1.579174  1.578610      1.546456  2.065591
+1    16  2.694979  2.421934  3.142549      1.546456  2.065591
+2    32  2.504328  1.604921  1.604722      1.546456  2.003918
+3    64  2.159309  1.569074  1.565916      1.546456  2.000977
+4   128  2.496376  1.575208  1.599610      1.546456  2.000000
+5   256  2.242306  1.552085  1.549597      1.546456  2.001528
+6   512  2.204950  1.554301  1.550855      1.546456  2.003442
+7  1024  2.289562  1.550856  1.547556      1.546456  2.000137
+8  2048  2.362564  1.551145  1.547809      1.546456  2.000917
+9  4096  2.355107  1.550883  1.547207      1.546456  2.000441
+```
+
+### Code
+1. The values for $n \in \{2^3, 2^4, ..., 2^{12}\}$ are looped through and the respective datasets are loaded as train data.
+2. Separate data frames (`trainXi` and `testXi`) are created which include the interaction term $x_1x_2$ for both the training and testing data.
+3. The models are fitted with appropriate training data
+    - GaussianNB and DummyClassifier from sklearn are used for NaiveBAyes and The Dummy respectively.
+    - GLM from statsmodels is used for Logistic regression with and without the interaction term.
+    - LRi uses the `trainXi` while the rest use `trainX`
+4. Optimal Bayes is defined as a python function that returns the result of the following predictor function with x1 and x2 from provided input dataframe:
+$$
+p(y=1|x_1,x_2)=\frac{1}{1+e^{-{0.1-2x_1+x_2+0.2x_1x_2}}}
+$$ 
+5. The accuracy for each model is calculated
+    - This is done by taking the mean of the hard predicted $\hat{y}\textnormal{s}$ compared to the actual $y\textnormal{s}$.
+    - For Naive Bayes and the dummy simply calling predict is enough but for the rest probabilities over or equal to 0.5 are considered as $\hat{y} = 1$
+6. The perplexity is calculated using the formula provided in problem 8.
+    - For Naive Bayes and the dummy the probabilities are obtained by calling `.predict_proba` and selecting the probability for the `y` in the test data set by index.
+    - For the other models `np.where()` is used to invert the calculated probability like: $1-p(y=1|x)$, when $y=0$ in the test dataset.
+7. The accuracy and perplexity are saved in their own dataframes for each $n$. After the loop the dataframes are printed.
+```Python
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+from sklearn.naive_bayes import GaussianNB
+from sklearn.dummy import DummyClassifier
+
+testDF = pd.read_csv('data/toy_test.csv')
+testX = testDF.drop(columns=['y'])
+testY = testDF['y']
+testXi = testX.copy()
+testXi['x1_x2'] = testDF['x1'] * testDF['x2']
+
+accuracyDF = pd.DataFrame({ 'n':[], 'NB':[], 'LR':[], 'LRi':[], 'OptimalBayes': [], 'Dummy': []})
+accuracyDF = accuracyDF.astype({'n': 'int64'})
+
+perplexityDF = pd.DataFrame({ 'n':[], 'NB':[], 'LR':[], 'LRi':[], 'OptimalBayes': [], 'Dummy': []})
+perplexityDF = perplexityDF.astype({'n': 'int64'})
+
+def optimal_bayes(df):
+    t = 0.1 - 2*df['x1'] + df['x2'] + 0.2*df['x1']*df['x2']
+    return 1 / (1 + np.exp(-t))
+
+for i in range(3, 13):
+    n = 2**i
+    trainDF = pd.read_csv(f'data/toy_train_{n}.csv')
+    trainX = trainDF.drop(columns=['y'])
+    trainXi = trainX.copy()
+    trainXi['x1_x2'] = trainDF['x1'] * trainDF['x2']
+    trainY = trainDF['y']
+
+    NB = GaussianNB()
+    NB.fit(trainX, trainY)
+    LR = sm.GLM(trainY, trainX, family=sm.families.Binomial()).fit()
+    LRi = sm.GLM(trainY, trainXi, family=sm.families.Binomial()).fit()
+    Dummy = DummyClassifier(strategy='prior').fit(trainX, trainY)
+
+    accuracyDF = pd.concat(
+        [
+            accuracyDF,
+            pd.DataFrame(
+                [[
+                    n,
+                    np.mean(testY.values == np.array(NB.predict(testX))),
+                    ((LR.predict(testX) >= 0.5) == testY).mean(),
+                    ((LRi.predict(testXi) >= 0.5) == testY).mean(),
+                    ((optimal_bayes(testX) >= 0.5) == testY).mean(),
+                    np.mean(testY.values == np.array(Dummy.predict(testX))),
+                ]],
+                columns=accuracyDF.columns)
+        ], 
+        ignore_index=True
+    )
+
+    perplexityDF = pd.concat(
+        [
+            perplexityDF,
+            pd.DataFrame(
+                [[
+                    n,
+                    np.exp(-np.mean(np.log(np.array(NB.predict_proba(testX)[testY])))),
+                    np.exp(-np.log(np.where(testY == 1, LR.predict(testX), 1 - LR.predict(testX))).mean()),
+                    np.exp(-np.log(np.where(testY == 1, LRi.predict(testXi), 1 - LRi.predict(testXi))).mean()),
+                    np.exp(-np.log(np.where(testY == 1, optimal_bayes(testX), 1 - optimal_bayes(testX))).mean()),
+                    np.exp(-np.mean(np.log(np.array(Dummy.predict_proba(testX)[testY])))),
+                ]],
+                columns=perplexityDF.columns)
+        ], 
+        ignore_index=True
+    )
+
+print('Accuracy')
+print(accuracyDF)
+print()
+print('Perplexity')
+print(perplexityDF)
+    
+```
+
+## Task c
+By adding the following at the end of the loop in the code for task b:
+```python
+if n == 4096:
+    print('LRi params at n=4096')
+    print(LRi.params)
+    print()
+```
+I got the following output:
+```bash
+LRi params at n=4096
+x1      -1.991962
+x2       0.931033
+x1_x2    0.303160
+dtype: float64
+```
+The coefficients are pretty close:
+| Coeff     | LRi       | Actual | Difference     |
+|-----------|-----------|--------|----------------|
+| Intercept | -         | 0.1    | Does not exist |
+| $x_1$     | -1.991962 | -2     | 0.008038       |
+| $x2_$     | 0.931033  | 1      | 0.068967       |
+| $x_1x_2$  | 0.303160  | 0.2    | 0.103160       |
+the exception being that LRi does not have an intercept.
+
+### Which of the models above are probabilistic, discriminative, and generative?
+All of the models except the dummy are probabilistic. This is because they model the probaility of a class given the input features. The dummy depends only on the $y$ in the training data and therefore does not calssify as a probabilistic model.
+Naive Bayes and the optimal bayes are generative classifiers
+Logistic regression is a discriminative classifier
+
+### How do accuracy and perplexity (log-likelihood) compare?
+As expected Optimal Bayes performs the best when it comes to both accuraacy and perplexity. 
+For accuracy, all models except the dummy converge towards the optimal bayes accuracy as the training data set grows.
+When it comes to perplexity, Naive Bayes performs really bad, due to the incorrect assumptions of feature independence. Even the dummy has better complexity with ~2, which corresponds to the perplexity of coin flipping. The difference between the accuracy and perplexity of Naive Bayes comes down to the fact that accuracy hides the errors visible in the probability by hard predicting a class even if the probability is 50%.
+
+### Is there a relation to the insights from the previous problem?
+We can see that when $n=16$ Naive Bayes has a higher accuracy than logistic regression does. While Logistic regression performs better at $n=8$ than Naive Bayes it could be due to "luck". If the insights from problem 11 hold true then generative models may perform better at smaller training sets, which could explain why Naive Bayes performs better at $n=16$
+
+### Why does logistic regression with the interaction term perform so well for larger datasets?
+The true function is a logistic function with very similar coefficients to what LRi has at $n=4096$. As the training dataset grows, the estimated coefficients converge toward the true functions coefficients. The Logisti Regression without interaction does not have all the coefficients that the true function has, which means it dor not converge as well as LRi does.
+
+### Does your dummy classifier ever outperform other classifiers, or do different classifiers outperform the optimal Bayes classifier?
+The dummy model is allwaysa the least accurate one, but it does have better perplexity than NB.
