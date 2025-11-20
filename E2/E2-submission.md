@@ -503,7 +503,7 @@ The coefficients are pretty close:
 |-----------|-----------|--------|----------------|
 | Intercept | -         | 0.1    | Does not exist |
 | $x_1$     | -1.991962 | -2     | 0.008038       |
-| $x2_$     | 0.931033  | 1      | 0.068967       |
+| $x_2$     | 0.931033  | 1      | 0.068967       |
 | $x_1x_2$  | 0.303160  | 0.2    | 0.103160       |
 the exception being that LRi does not have an intercept.
 
@@ -525,3 +525,75 @@ The true function is a logistic function with very similar coefficients to what 
 
 ### Does your dummy classifier ever outperform other classifiers, or do different classifiers outperform the optimal Bayes classifier?
 The dummy model is allwaysa the least accurate one, but it does have better perplexity than NB.
+
+# Problem 13
+I begin by splitting for x1
+To deside the where to split I minimise the Gini Index.
+$$
+G = \frac{n_x}{n}(1 - \frac{n_x}{n}) + \frac{n_o}{n}(1 - \frac{n_o}{n})
+$$
+where $n_x$, $n_o$ and $n$ are number of x, number of o and total number of points respectively.
+
+Because I am only dealing with two classes I can simplify the Gini Index to
+$$
+G = \frac{n_x}{n}\frac{n_o}{n} + \frac{n_o}{n}\frac{n_x}{n}
+$$
+$$
+= 2 * \frac{n_x}{n}\frac{n_o}{n}
+$$
+$$
+= 2 * \frac{n_x*n_o}{n^2}
+$$
+
+
+![Iteration 0](../static/P13-1.png)
+
+Visually I can see that the left side Gini Index will be minimized at $x_1=1$, because only Os will be on the left. 
+## $x_1=1$
+![Iteration 1 option 1](../static/P13-2.png)
+- 0 Xs and 8 Os on the left
+- 8 Xs and 7 Os on the right
+
+$G = 2 * \frac{0*8}{8^2} + 2 * \frac{8*7}{15^2} = 04977...$
+
+I begin moving right from $x_1=1$:
+## $x_1=1.5$
+![Iteration 1 option 2](../static/P13-3.png)
+- 1 X and * Os on the left
+- 7 Xs and 7 Os on the right
+
+$G = 2*\frac{1*8}{9^2} + 2 * \frac{7*7}{14^2} = 0.6975...$
+
+## $x_1=2$
+![Iteration 1 option 3](../static/P13-4.png)
+- 2 Xs and 8 Os on the left
+- 6 Xs and 7 Os on the right
+
+$G = 2*\frac{2*8}{10^2} + 2 * \frac{6*7}{13^2} = 0.8170...$
+
+I see that the Gini sum is increasing as I move right and conclude that the gini index is minimized at $x_1=1$
+
+Next I start splitting $x_2$ in the right segment. This is because the left already only contains Os so splitting further would be unnecessary. I start at $x_2=2$ and move down because then the top part of the segment is only Xs.
+
+## $x_2=2$
+![Iteration 2 option 1](../static/P13-5.png)
+- 7 Xs and 0 Os on top
+- 1 X and 7 Os on bottom
+
+$G = 2*\frac{7*0}{7^2} + 2 * \frac{1*7}{8^2} = 0.2187...$
+
+## $x_2=2.5$
+![Iteration 2 option 2](../static/P13-6.png)
+- 7 Xs and 1 Os on top
+- 1 X and 6 Os on bottom
+
+$G = 2*\frac{7*1}{7^2} + 2 * \frac{1*6}{8^2} = 0.4732...$
+
+## $x_2=2.55$
+![Iteration 2 option 3](../static/P13-7.png)
+- 8 Xs and 1 Os on top
+- 0 X and 6 Os on bottom
+
+$G = 2*\frac{8*1}{7^2} + 2 * \frac{0*6}{8^2} = 0.3265...$
+
+There are now only Os on the bottom, which means the Gini Index will not decrease furhter by moving downwards. Therefore the best split is at $x_2=2$.
