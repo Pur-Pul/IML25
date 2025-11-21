@@ -528,7 +528,7 @@ The dummy model is allwaysa the least accurate one, but it does have better perp
 
 # Problem 13
 I begin by splitting for x1
-To deside the where to split I minimise the Gini Index.
+To decide the where to split I minimise the Gini Index.
 $$
 G = \frac{n_x}{n}(1 - \frac{n_x}{n}) + \frac{n_o}{n}(1 - \frac{n_o}{n})
 $$
@@ -539,61 +539,119 @@ $$
 G = \frac{n_x}{n}\frac{n_o}{n} + \frac{n_o}{n}\frac{n_x}{n}
 $$
 $$
-= 2 * \frac{n_x}{n}\frac{n_o}{n}
+= 2 \frac{n_x}{n}\frac{n_o}{n}
 $$
 $$
-= 2 * \frac{n_x*n_o}{n^2}
+= 2 \frac{n_x \times n_o}{n^2}
 $$
 
 
 ![Iteration 0](../static/P13-1.png)
 
 Visually I can see that the left side Gini Index will be minimized at $x_1=1$, because only Os will be on the left. 
-## $x_1=1$
-![Iteration 1 option 1](../static/P13-2.png)
-- 0 Xs and 8 Os on the left
-- 8 Xs and 7 Os on the right
-
-$G = 2 * \frac{0*8}{8^2} + 2 * \frac{8*7}{15^2} = 04977...$
-
 I begin moving right from $x_1=1$:
-## $x_1=1.5$
-![Iteration 1 option 2](../static/P13-3.png)
-- 1 X and * Os on the left
-- 7 Xs and 7 Os on the right
-
-$G = 2*\frac{1*8}{9^2} + 2 * \frac{7*7}{14^2} = 0.6975...$
-
-## $x_1=2$
-![Iteration 1 option 3](../static/P13-4.png)
-- 2 Xs and 8 Os on the left
-- 6 Xs and 7 Os on the right
-
-$G = 2*\frac{2*8}{10^2} + 2 * \frac{6*7}{13^2} = 0.8170...$
+| $x_1=1$                                                              | $x_1=1.5$                                                            | $x_1=2$                                                                |
+|----------------------------------------------------------------------|----------------------------------------------------------------------|------------------------------------------------------------------------|
+| ![Iteration 1 option 1](../static/P13-2.png)                         | ![Iteration 1 option 2](../static/P13-3.png)                         | ![Iteration 1 option 3](../static/P13-4.png)                           |
+| 0 Xs and 8 Os on the left                                            | 1 X and * Os on the left                                             | 2 Xs and 8 Os on the left                                              |
+| 8 Xs and 7 Os on the right                                           | 7 Xs and 7 Os on the right                                           | 6 Xs and 7 Os on the right                                             |
+| $G = 2\frac{0 \times 8}{8^2} + 2 \frac{8 \times 7}{15^2} = 04977...$ | $G = 2\frac{1 \times 8}{9^2} + 2\frac{7 \times 7}{14^2} = 0.6975...$ | $G = 2\frac{2 \times 8}{10^2} + 2 \frac{6 \times 7}{13^2} = 0.8170...$ |
 
 I see that the Gini sum is increasing as I move right and conclude that the gini index is minimized at $x_1=1$
 
 Next I start splitting $x_2$ in the right segment. This is because the left already only contains Os so splitting further would be unnecessary. I start at $x_2=2$ and move down because then the top part of the segment is only Xs.
 
-## $x_2=2$
-![Iteration 2 option 1](../static/P13-5.png)
-- 7 Xs and 0 Os on top
-- 1 X and 7 Os on bottom
 
-$G = 2*\frac{7*0}{7^2} + 2 * \frac{1*7}{8^2} = 0.2187...$
+| $x_2=2$                                                             | $x_2=2.5$                                                           | $x_2=2.55$                                                      |
+|---------------------------------------------------------------------|---------------------------------------------------------------------|-----------------------------------------------------------------|
+| ![Iteration 2 option 1](../static/P13-5.png)                        | ![Iteration 2 option 2](../static/P13-6.png)                        | ![Iteration 2 option 3](../static/P13-7.png)                    |
+| 7 Xs and 0 Os on top                                                | 7 Xs and 1 Os on top                                                | 8 Xs and 1 Os on top                                            |
+| 1 X and 7 Os on bottom                                              | 1 X and 6 Os on bottom                                              | 0 X and 6 Os on bottom                                          |
+| $G = 2\frac{7 \times 0}{7^2} + 2\frac{1 \times 7}{8^2} = 0.2187...$ | $G = 2\frac{7 \times 1}{7^2} + 2\frac{1 \times 6}{8^2} = 0.4732...$ | $G = 2\frac{8\times1}{7^2} + 2\frac{0\times6}{8^2} = 0.3265...$ |
 
-## $x_2=2.5$
-![Iteration 2 option 2](../static/P13-6.png)
-- 7 Xs and 1 Os on top
-- 1 X and 6 Os on bottom
+There are now only Os on the bottom, which means the Gini Index will not decrease furhter by moving downwards. Therefore the best split is at $x_2=2$. After this the bottom right is the only segment with mixed classes. From the leftmost figure, which represents the chosen split, it is clear that the next split should happen at $x_1=2$ in the bottom right segment. At $x_1=2$ the gini index will be 0 and moving left or right would increase it
 
-$G = 2*\frac{7*1}{7^2} + 2 * \frac{1*6}{8^2} = 0.4732...$
+![Iteration 3 option 1](../static/P13-8.png) 
 
-## $x_2=2.55$
-![Iteration 2 option 3](../static/P13-7.png)
-- 8 Xs and 1 Os on top
-- 0 X and 6 Os on bottom
+$G = 2\frac{1 \times 0}{1^2} + 2\frac{0 \times 7}{7^2} = 0$
 
-$G = 2*\frac{8*1}{7^2} + 2 * \frac{0*6}{8^2} = 0.3265...$
+With these splits the decision tree looks like this:
 
-There are now only Os on the bottom, which means the Gini Index will not decrease furhter by moving downwards. Therefore the best split is at $x_2=2$.
+```mermaid
+flowchart TD
+    A[x1 < 1]
+    B[O]
+    C[x2 < 2]
+    D[x1 < 2]
+    F[X]
+    G[O]
+    E[X]
+    A --> B
+    A --> C
+
+    C --> D
+    C --> E
+
+    D --> F
+    D --> G
+```
+
+# Problem 14
+## Task a
+In 1-NN only the closest point is observed. This means that the decision boundaries are between poitns in the training data where a class difference is.
+From $x_2=2.0$ to $x_3=3.0$ the class switches from +1 to -1. This means that at 2.5 is a classification boundary. The following are the classification boundaries for 1-NN: [2.5, 4.0, 10.5, 14.0, 15.5]. 
+| ![1-NN](../static/P14-1.png) |
+|:-:|
+| In the above figure the boundaries are visible as the edges between the green and red rectangles. The green rectangles represent the +1 class area and the red the -1. |
+
+The training error for 1-NN is 0, because each point would simply be classfied to its own class due to the closest point being itself.
+
+In 3-NN the three closes points are observed and the most common class is selected. This means that if atleast two of the closest poitns are of a specific class then that class is chosen. This means that the classification boundaries 3.5 and 4.0 in 1-NN do not exist in 3-NN because there is ever only one point which is -1 when moving past them. The classification boundaries in 3-NN are: [10.5].
+
+| ![3-NN](../static/P14-2.png) |
+|:-:|
+| In the above figure the boundary between +1 and -1 is visible as the edge between the green and red rectangles. |
+
+To calculate the training error for the 3-NN the number of missclassified points need to be counted. In the above figure there is one -1 point in the green rectangle and one +1 pont in the red. In total two missclassified points in the training data. In otherwords the training error is $\frac{2}{14}=\frac{1}{7}$
+
+## Task b
+As k increases outlier data points affect the classification less. This may prune out smaller classification areas. 
+Example of large k: Imagine a 2-dimensional dataset with 100 Xs and a larger amount of Os sourrounding the Xs. If k is set to 201 the whole area of Xs will be classified as Os.
+Example of small k: Imagine a 2-dimensional dataset where there is a single X sourrounded by a lot of Os. If k is set to less than 3 there will be a decision boundary in the middle of the collection of Os.
+
+# Problem 15
+## Task a
+To select the hyper plane with the largest margin I need to make sure the line is as far from datapoints as possible while sperating the classes. From the figure and dataset I can see that there is a clear class separation in the interval (2.0, 4.0) on $x_1$. The support vectors are the points closest to the separation, which in this case are [D: (2.0, 0.0)] for class 1 and [E: (4.0, 1.0), F: (4.0, -1.0)] for class -1.
+
+The both support vectors for class -1 have the same value on $x_1$, which means the hyper plane will need to be constant in the $x_1$ dimension. In other words I need to choose a value for $x_1$ that has the same distance to all support vectors' $x_1$ component. 
+
+I choose the middle of the previously mentioned separation interval $x_1=3.0$. This means the hyperplane becomes:
+$$3.0 - X_1=0$$
+
+## Task b
+The curve $(1+X_1)^2+(2-X_2)^2=4$ is a circle in the 2-dimensional space X. When plotted out it looks like this:
+|![plotted curve](../static/P15-1.png)|
+|:-:|
+| The red area is where $(1+X_1)^@+(2-X_2)^2\le4$ and the blue $(1+X_1)^@+(2-X_2)^2 \gt 4$. |
+| The points maintain their original class in the plot, but if reclassfied B would be the only red and the rest would be blue. |
+
+## Task c
+To find out the class of the new points [(0,0), (-1,1), (2,2), (3,8)] i place them in the previous plot as I, J, K and L respectively:
+|![plotted curve](../static/P15-2.png)|
+|:-:|
+| It is visible that J=(-1,1) is the only one that would be classified as red and the rest of the new points are blue.|
+| Note that the $x_2$ acis has been rescaled to fit all the points in the plot. |
+
+## Task d
+The decision boundary $(1+X_1)^2+(2-X_2)^2=4$ can be expanded:
+$$\implies (X_1^2+2X_1+1)+(X_2^2-4X_2+4)=4$$
+$$\implies X_1^2 + X_2^2 + 2X_1 - 4X_2 + 5 = 4$$
+$$\implies X_1^2 + X_2^2 + 2X_1 - 4X_2 + 1 = 0$$
+Which is a linear function in the space $X_1^2, X_2^2, X_1, X_2$
+
+# Problem 16
+## Task a
+I learned a lot about classifiers in this set and they make more sense than I initially thought. I do still struggle with higher dimensional datasets because I am used to being able to visualise things in my head, which is not vey easy with higher dimensions. I have encountered K-NN before, so it was easier to work with than the other classfiers, but the classification trees did remind me of quad- and octrees, which I have played around with before. 
+
+## Task b 
+I put around 17 hours into this exercise set.
