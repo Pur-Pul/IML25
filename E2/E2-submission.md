@@ -24,7 +24,7 @@ Test accuracy: 0.9866666666666667
 ```
 
 ### Plot
-![Probability plot](../../static/E2P8A.png)
+![Probability plot](../static/E2P8A.png)
 
 ### code
 ```python
@@ -84,7 +84,7 @@ Test accuracy: 0.8933333333333333
 ```
 
 ### Plot
-![Probability plot](../../static/E2P8B.png)
+![Probability plot](../static/E2P8B.png)
 
 - The code works the same as in task a, but `GLM` is used instead of `Logit`.
 - The model is fitted with the `fit_regularized` function with the parameters `alpha=0.1` and `L1_wt=1.0`.
@@ -154,9 +154,9 @@ The problem is that there is a a quasi-complete separation in some of the variab
 | NotAdelie |        43 - 60       |
 This means the bill length can predict the species perfectly except for the range 43 - 44. This casues the maximum likelihood estimation to fail for the variable.
 
+<div style="page-break-after: always;"></div>
+
 # Problem 9
-
-
 $$
 \Pr(Y=k|X=x)=\frac{\pi_k f_k(x)}{\sum^2_{l=1}\pi_l f_l(x)}
 $$
@@ -213,6 +213,8 @@ $$
 $$
 
 We can see that the quadratic coefficient is $\frac{1}{\sigma^2_1} - \frac{1}{\sigma^2_2}$. If we assume that $\sigma_1 \neq \sigma_2$ then the quadratic coefficient is non-zero, which means that the decision boundary equation is quadratic and not linear.
+
+<div style="page-break-after: always;"></div>
 
 # Problem 10
 ## Task a
@@ -332,6 +334,8 @@ p^(y = Adelie | x_1) = 0.7953470279474658
 p^(y = Adelie | x_2) = 0.998919564529168
 Accuracy: 0.9333333333333333
 
+<div style="page-break-after: always;"></div>
+
 # Problem 11
 ## Task a
 Discriminative learning is considered to be better for larger datasets while generative ones may be better when the dataset is small. This is because while discriminative learning has generally has a lower asymptotic error, generative learning reaches its asymptotic error earlier. This means that as the dataset increases, generative classifiers reach their final performance before discriminative ones do, which may mean that they are better for smaller sets.
@@ -347,6 +351,8 @@ $h_{Gen}$ is fit to optimize the joint likelyhood of the input/features $p(\text
 
 ## Task c
 For discrete inputs the Naive Bayes performs better most of the time with a few exceptions where the training dataset has grown enough for logistic regression to overtake it. Continuous datasets in comparasion show more scenarios where logistic regression overtakes Naive Bayes as the training dataset grows. 
+
+<div style="page-break-after: always;"></div>
 
 # Problem 12
 ## Task a
@@ -526,6 +532,8 @@ The true function is a logistic function with very similar coefficients to what 
 ### Does your dummy classifier ever outperform other classifiers, or do different classifiers outperform the optimal Bayes classifier?
 The dummy model is allwaysa the least accurate one, but it does have better perplexity than NB.
 
+<div style="page-break-after: always;"></div>
+
 # Problem 13
 I begin by splitting for x1
 To decide the where to split I minimise the Gini Index.
@@ -596,6 +604,8 @@ flowchart TD
     D --> G
 ```
 
+<div style="page-break-after: always;"></div>
+
 # Problem 14
 ## Task a
 In 1-NN only the closest point is observed. This means that the decision boundaries are between poitns in the training data where a class difference is.
@@ -618,6 +628,8 @@ To calculate the training error for the 3-NN the number of missclassified points
 As k increases outlier data points affect the classification less. This may prune out smaller classification areas. 
 Example of large k: Imagine a 2-dimensional dataset with 100 Xs and a larger amount of Os sourrounding the Xs. If k is set to 201 the whole area of Xs will be classified as Os.
 Example of small k: Imagine a 2-dimensional dataset where there is a single X sourrounded by a lot of Os. If k is set to less than 3 there will be a decision boundary in the middle of the collection of Os.
+
+<div style="page-break-after: always;"></div>
 
 # Problem 15
 ## Task a
