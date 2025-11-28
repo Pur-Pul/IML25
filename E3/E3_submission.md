@@ -207,11 +207,111 @@ The columns need to be normalized, because the similiarity is calculated with eu
 
 ### Output
 ```bash
-      class      1      2    3     4
-0        II   13.0   32.0  0.0  72.0
-1        Ia    5.0    1.0  0.0  20.0
-2        Ib    4.0   15.0  0.0  63.0
-3  nonevent  107.0  100.0  4.0  14.0
+cluster      1    3     0      2
+class                           
+II        30.0  0.0  70.0   17.0
+Ia         1.0  0.0  18.0    7.0
+Ib        14.0  0.0  61.0    7.0
+nonevent  97.0  9.0  18.0  101.0
 ```
 
-Despite using four clusters, one of the clusters (in this case 3) ends up allmost empty. If each class were assigned to the cluster most of their observations are in, classes 'II' 'Ia' and 'Ib' would fall into the same cluster (in this case 4). While the nonevent class is mostly separated from the other events it is also split up almost equally between two classes. 
+Using this contingency table the class mappings become: 
+
+|Cluster|Class    |
+|-------|---------|
+| 0     | Ib      |
+| 1     | II      |
+| 2     | nonevent|
+| 3     | Ia      |
+
+This means that the errors per class are:
+| Class     | Errors            |
+|-|-|
+| II        | 70 + 17 = 87      |
+| Ia        | 1 + 18 + 7 = 26   |
+| Ib        | 14 + 7 = 21       |
+| nonevent  | 97 + 9 + 18 = 124 |
+
+Nonevent has the most missclassified observations, but Ia has all its observations missclassified.
+
+## Task c
+### I
+![loss histogram](../static/E3P19C.png)
+
+```bash
+Max loss 12440.854500553978
+Min loss 10646.871669424883
+```
+
+From the histogram we can see that about 50 of the 1000 runs fall into the 1% range of the minimum loss. This makes the probability of a good run $p=\frac{50}{1000}=0.05$. The estimated number of iteration until one good run becomes: $\frac{1}{0.05}=20$
+
+### II
+![loss histogram k-means++](../static/E3P19C2.png)
+
+```bash
+Max loss 12424.835358011127
+Min loss 10646.871669424883
+```
+
+There is a substantial increase in the low losses. From the histogram it seems about 450 of the 1000 iterations produce losses within 1% of the lowest loss. This makes the probability: $p = \frac{450}{1000}=0.45$ and the estimated number of iterations become: $\frac{1}{0.45}=2.2222...$, which can be rounded up to 3.
+
+The number of frequency of low losses was not the only thing that k-means++ improved. It also lowered the highest loss. The lowset loss remained almost unaffected however.
+
+## Task d
+### I
+
+![Single and compl;ete link dendrograms](../static/E3P19D.png)
+
+#### Output
+```bash
+Complete cluster labels
+[0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
+ 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 0 0 1 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 3 1 3 1 1 1
+ 1 1 1 1 1 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
+ 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0]
+
+Single cluster labels
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 3 0 3 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0]
+```
+
+### II
+confusion matrix
+```bash
+[[318   0   0   0]
+ [128   0   0   0]
+ [  0   1   1   0]
+ [  0   0   0   2]]
+```
+
+From the confusion matrix it is visible that:
+- All 318 observations in complete linkage cluster 0 are also cluster 0 in single linkage.
+- All 128 observations in complete linkage cluster 1 are in cluster 0 in single linkage.
+- In both complete and single linkage there are only a couple observations at most in clusters 2 and 3.
+
+Single linkage produces a very poorly balanced denrogram. Almost all observations fall into the cluster 0. Complete linkage produces a better balanced dendrogram compared to single linkage, but two of the clusters still only have a couple observations.
+
+### III
+Single linkage tends to produce elongated clusters, because only the smallest distances matter when choosing links. This be observed in the above dendrogram in cluster 0 (orange) as long streaks that stretch across the cluster.
+
+Complete linkage on the other hand prdouces more compact clusters, due to the max distance between clusters being used for merges. This is also visible in the dendrogram, as the links are mush shorter than in the single linkage.

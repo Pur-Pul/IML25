@@ -3,29 +3,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+from scipy.optimize import linear_sum_assignment
 
 trainDF = pd.read_csv('data/train.csv')
 
-scaler = StandardScaler()
+scaler = StandardScaler(with_mean=True, with_std=True)
+
 X = scaler.fit_transform(trainDF.filter(regex=r'\.mean$'))
 
-kmeans = KMeans(n_clusters=4, random_state=2, n_init=20).fit(X)
+kmeans = KMeans(n_clusters=4, random_state=2, n_init=10, init='random').fit(X)
 
-classes = np.unique(trainDF['class4'])
+contingency = pd.DataFrame({ 'class': trainDF['class4'], 'cluster': kmeans.labels_})
+contingency = contingency.groupby(['class', 'cluster']).size().unstack()
+contingency = contingency.fillna(0)
 
-confusionDF = pd.DataFrame({'class': [], '1': [], '2': [], '3': [], '4': []})
+lsa = linear_sum_assignment(contingency, maximize = True)
 
-for cl in classes:
-    sums = [0,0,0,0]
-    for row in trainDF[trainDF['class4'] == cl].index.values:
-        sums[kmeans.labels_[row]]+=1
-
-    confusionDF = pd.concat(
-        [
-            confusionDF,
-            pd.DataFrame([[cl, sums[0], sums[1], sums[2], sums[3]]], columns=confusionDF.columns)
-        ], 
-        ignore_index=True
-    )
-print(confusionDF)
+print(contingency[lsa[1]])
 
