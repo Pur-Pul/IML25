@@ -196,3 +196,22 @@ There are two clusters remaining, which means they will be joined. Their observa
 ![Iteration 6](../static/E3P18-9.png)
 
 As previously mentioned the first three iterations are identical, because replacing the single link with complete link does not affect distance between single observations. It only icnreases distances to clusters contining multiple observations. The clusters produced by single link are elongated compared to the compact clusters in the complete link. Single link compares only the closest observations, which ignores the fact that a cluster may by large with observations much further away. By comparing the furthes away observations, the new cluster is more likely to be smaller.
+
+# Problem 19
+## Task a
+![Clustering loss](../static/E3P19A.png)
+
+The columns need to be normalized, because the similiarity is calculated with euclidian distance. The columns are not necessarily scaled equally by default, which means that certain features affect the clustering more than others.
+
+## Task b
+
+### Output
+```bash
+      class      1      2    3     4
+0        II   13.0   32.0  0.0  72.0
+1        Ia    5.0    1.0  0.0  20.0
+2        Ib    4.0   15.0  0.0  63.0
+3  nonevent  107.0  100.0  4.0  14.0
+```
+
+Despite using four clusters, one of the clusters (in this case 3) ends up allmost empty. If each class were assigned to the cluster most of their observations are in, classes 'II' 'Ia' and 'Ib' would fall into the same cluster (in this case 4). While the nonevent class is mostly separated from the other events it is also split up almost equally between two classes. 
