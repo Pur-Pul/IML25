@@ -315,3 +315,28 @@ Single linkage produces a very poorly balanced denrogram. Almost all observation
 Single linkage tends to produce elongated clusters, because only the smallest distances matter when choosing links. This be observed in the above dendrogram in cluster 0 (orange) as long streaks that stretch across the cluster.
 
 Complete linkage on the other hand prdouces more compact clusters, due to the max distance between clusters being used for merges. This is also visible in the dendrogram, as the links are mush shorter than in the single linkage.
+
+# Problem 20
+
+## Task a
+![PCA plot](../static/E3P20A.png)
+
+## Task b
+![PVE and cumulative PVE](../static/E3P20B.png)
+
+The orange curves represent the proportion of variance explained with normalization while the blue are with the raw data. It is clear that the normalization spreads out the variance more across the principal components. Before normalization the varaibles in the dataset have different variances, which affects how PCA forms the components. The principal components are created in the order of largest variance and the following components are formed from data uncorrelated to the previous. This means that if a single variable explains 90% of the variance in the data, the following components are formed from the remaining 10%.
+
+## Task c
+![PVE and cumulative PVE](../static/E3P20C.png)
+
+From the above plot an elbow can be seen to form around component 4, so I choose the 4 first principal components from the PCA. The following are the results when fitting the data to K-NN with K = 1:
+```bash
+1-NN accuracy: 0.5288888888888889
+1-NN accuracy with PCA: 0.6444444444444445
+```
+
+When changing the dimensionality the the accuracy for PCA varies for lower values and reaches an equlibrium for larger. When plotted out it looks like this:
+
+![Changing dimensionality](../static/E3P20C2.png)
+
+Where the x axis is dimensionality and y is accuracy.
