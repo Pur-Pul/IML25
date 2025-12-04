@@ -16,7 +16,7 @@ glyphs = ['o', '^', '*', 's']
 
 PCX, PCY = 0, 1
 for e, event in enumerate(trainDF['class4'].unique()):
-    X = trainDF[trainDF['class4'] == event].filter(regex=r'\.mean$')
+    X = trainDF[trainDF['class4'] == event].filter(regex=r'\.std$')
     scaled_X = scaler.fit_transform(X)
 
     pca = PCA()

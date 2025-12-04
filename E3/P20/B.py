@@ -25,14 +25,14 @@ PVE = pca.explained_variance_ratio_
 
 
 plt.subplot(1, 2, 1)
-#plt.plot(np.linspace(1, len(PVE), len(PVE)), PVE, label='Raw PVE')
+plt.plot(np.linspace(1, len(PVE), len(PVE)), PVE, label='Raw PVE')
 plt.plot(np.linspace(1, len(scaled_PVE), len(scaled_PVE)), scaled_PVE, label='Normalized PVE')
 plt.xlabel('Principal component')
 plt.ylabel('Prop. Variance Explained')
 plt.legend()
 
 plt.subplot(1, 2, 2)
-#plt.plot(np.linspace(1, len(PVE), len(PVE)), np.cumsum(PVE), label='Raw PVE')
+plt.plot(np.linspace(1, len(PVE), len(PVE)), np.cumsum(PVE), label='Raw PVE')
 plt.plot(np.linspace(1, len(scaled_PVE), len(scaled_PVE)), np.cumsum(scaled_PVE), label='Normalized PVE')
 plt.xlabel('Principal component')
 plt.ylabel('Cumulative Prop. Variance Explained')

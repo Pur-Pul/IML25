@@ -203,7 +203,63 @@ As previously mentioned the first three iterations are identical, because replac
 
 The columns need to be normalized, because the similiarity is calculated with euclidian distance. The columns are not necessarily scaled equally by default, which means that certain features affect the clustering more than others.
 
+### code
+1. `KMeans` from the `sklearn` library is run on the data independently for 1 to 20 clusters.
+2. The losses are recorded of KMeans is recorded by extracting the `_inertia` parameter.
+3. The losses are plotted out as a function of the number of clusters.
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+trainDF = pd.read_csv('data/train.csv')
+
+scaler = StandardScaler()
+X = scaler.fit_transform(trainDF.filter(regex=r'\.mean$'))
+
+losses = []
+
+for K in range(1, 21):
+    kmeans = KMeans(n_clusters=K, random_state=2, n_init=10, init='random').fit(X)
+    losses.append(kmeans.inertia_)
+
+plt.plot(np.linspace(1, 20, 20), losses)
+plt.show()
+```
+
 ## Task b
+### Code
+1. `KMeans` from the `sklearn` library is run on the data with 4 clusters.
+2. A contingency table is constructed using the labels returned by `KMeans`.
+3. `linear_sum_assignment` from `scipy` is used to order the contingency table by maximizing the sum of the diagonal elements. This prodcues a confusion matrix.
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from scipy.optimize import linear_sum_assignment
+
+trainDF = pd.read_csv('data/train.csv')
+
+scaler = StandardScaler(with_mean=True, with_std=True)
+
+X = scaler.fit_transform(trainDF.filter(regex=r'\.mean$'))
+
+kmeans = KMeans(n_clusters=4, random_state=2, n_init=10, init='random').fit(X)
+
+contingency = pd.DataFrame({ 'class': trainDF['class4'], 'cluster': kmeans.labels_})
+contingency = contingency.groupby(['class', 'cluster']).size().unstack()
+contingency = contingency.fillna(0)
+
+lsa = linear_sum_assignment(contingency, maximize = True)
+
+print(contingency[lsa[1]])
+
+
+```
 
 ### Output
 ```bash
@@ -256,6 +312,59 @@ Min loss 10646.871669424883
 There is a substantial increase in the low losses. From the histogram it seems about 450 of the 1000 iterations produce losses within 1% of the lowest loss. This makes the probability: $p = \frac{450}{1000}=0.45$ and the estimated number of iterations become: $\frac{1}{0.45}=2.2222...$, which can be rounded up to 3.
 
 The number of frequency of low losses was not the only thing that k-means++ improved. It also lowered the highest loss. The lowset loss remained almost unaffected however.
+
+### Code
+There are two different loops: one for part (I) and one for part (II). The only difference is the initialization, which is random in the first and KMeans++ in the second. 
+1. KMeans is run 1000 times on the data with 4 clusters and the losses are recorded.
+2. The minimum and maximum losses are printed.
+3. A histogram of the distribution of the losses is plotted.
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from scipy.optimize import linear_sum_assignment
+
+trainDF = pd.read_csv('data/train.csv')
+
+scaler = StandardScaler(with_mean=True, with_std=True)
+
+X = scaler.fit_transform(trainDF.filter(regex=r'\.mean$'))
+
+## I
+losses = np.array([])
+
+for i in range (0, 1000):
+    kmeans = KMeans(n_clusters=4, n_init=1, init='random').fit(X)
+    losses = np.append(losses, kmeans.inertia_)
+print('random')
+print('Max loss', np.max(losses))
+print('Min loss', np.min(losses))
+
+plt.hist(losses, 100)
+plt.xlabel('loss')
+plt.ylabel('count')
+plt.title('random')
+plt.show()
+
+
+## II
+losses = np.array([])
+
+for i in range (0, 1000):
+    kmeansplus = KMeans(n_clusters=4, n_init=1, init='k-means++').fit(X)
+    losses = np.append(losses, kmeansplus.inertia_)
+
+print('Max loss', np.max(losses))
+print('Min loss', np.min(losses))
+
+plt.hist(losses, 100)
+plt.xlabel('loss')
+plt.ylabel('count')
+plt.title('k-means++')
+plt.show()
+```
 
 ## Task d
 ### I
@@ -316,15 +425,151 @@ Single linkage tends to produce elongated clusters, because only the smallest di
 
 Complete linkage on the other hand prdouces more compact clusters, due to the max distance between clusters being used for merges. This is also visible in the dendrogram, as the links are mush shorter than in the single linkage.
 
+### Code
+1. `AgglomerativeClustering` from `sklearn` is run on the data, first with complete linkage and then with single linkage.
+2. cut_tree is used to separate the trees into 4 clusters, but before that `compute_linkage` from `ISLP` is used to process the linkages.
+3. The cluster labels for the complete and single linkages are printed.
+4. A confusion matrix between the different linkages is created with `confusion_matrix` from `sklearn`
+5. The two trees are plotted as dendrograms using `denrogram` from `scipy`. To color the clusters in the dendrograms the `color_threshold` parameter is set to the height of the 4th merge from the root of the trees.
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import AgglomerativeClustering as AC
+from sklearn.preprocessing import StandardScaler
+from scipy.optimize import linear_sum_assignment
+from scipy.cluster.hierarchy import dendrogram
+from ISLP.cluster import compute_linkage
+from scipy.cluster.hierarchy import cut_tree
+from sklearn.metrics import confusion_matrix
+
+K = 4
+
+scaler = StandardScaler(with_mean=True, with_std=True)
+
+trainDF = pd.read_csv('data/train.csv')
+X = scaler.fit_transform(trainDF.filter(regex=r'\.mean$'))
+
+completeLinkage = compute_linkage(AC(distance_threshold=0, n_clusters=None, linkage='complete').fit(X))
+singleLinkage = compute_linkage(AC(distance_threshold=0, n_clusters=None, linkage='single').fit(X))
+
+complete_clusters = cut_tree(completeLinkage, n_clusters=K).flatten()
+single_clusters = cut_tree(singleLinkage, n_clusters=K).flatten()
+
+print('Complete cluster labels')
+print(complete_clusters)
+print()
+print('Single cluster labels')
+print(single_clusters)
+print(confusion_matrix(complete_clusters, single_clusters))
+
+fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+dendrogram(completeLinkage, ax=ax[0], color_threshold=completeLinkage[-K, 2])
+ax[0].set_title("Complete Linkage")
+
+dendrogram(singleLinkage, ax=ax[1], color_threshold=singleLinkage[-K, 2])
+ax[1].set_title("Single Linkage")
+
+plt.show()
+```
+
 # Problem 20
 
 ## Task a
 ![PCA plot](../static/E3P20A.png)
 
+### Code
+1. The unique events II Ia Ib and nonevent are loop through and their observations are normalized and fitted with `PCA` from `sklearn`.
+2. PCA scores are obtained and the fist two principal components are plotted in a scatter plot. Each event has a unique color and glyph.
+```python
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+
+scaler = StandardScaler(with_mean=True, with_std=True)
+
+trainDF = pd.read_csv('data/train.csv')
+class4 = trainDF['class4']
+
+colors = ['r', 'g', 'b', 'y']
+glyphs = ['o', '^', '*', 's']
+
+
+PCX, PCY = 0, 1
+for e, event in enumerate(trainDF['class4'].unique()):
+    X = trainDF[trainDF['class4'] == event].filter(regex=r'\.std$')
+    scaled_X = scaler.fit_transform(X)
+
+    pca = PCA()
+    pca.fit(scaled_X)
+    scores = pca.transform(scaled_X)
+    plt.scatter(scores[:,PCX], scores[:,PCY], color=colors[e], marker=glyphs[e], label=event)
+
+plt.xlabel('PC%d' % (PCX+1))
+plt.ylabel('PC%d' % (PCY+1))
+plt.legend()
+plt.show()
+
+```
+
 ## Task b
 ![PVE and cumulative PVE](../static/E3P20B.png)
 
 The orange curves represent the proportion of variance explained with normalization while the blue are with the raw data. It is clear that the normalization spreads out the variance more across the principal components. Before normalization the varaibles in the dataset have different variances, which affects how PCA forms the components. The principal components are created in the order of largest variance and the following components are formed from data uncorrelated to the previous. This means that if a single variable explains 90% of the variance in the data, the following components are formed from the remaining 10%.
+
+### Code
+1. The observations are normalized and fitted with `PCA`. 
+2. The princpal variance explained is extracted from the normalized PCA results though the `explained_variance_ration_` parameter.
+3. The raw un-normalized observations fitted with `PCA` and PVE is extracted as in the previous step.
+4. Two separate plots are created one for PVE per component and the other for cumulative PVE over the components.
+5. In each plot the are two curves. One for the normalized data and one for the raw.
+```python
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+
+scaler = StandardScaler(with_mean=True, with_std=True)
+
+trainDF = pd.read_csv('data/train.csv')
+class4 = trainDF['class4']
+
+colors = ['r', 'g', 'b', 'y']
+glyphs = ['o', '^', '*', 's']
+
+X = trainDF.filter(regex=r'\.mean$')
+scaled_X = scaler.fit_transform(X)
+
+pca = PCA()
+pca.fit(scaled_X)
+scaled_PVE = pca.explained_variance_ratio_
+
+pca.fit(X)
+PVE = pca.explained_variance_ratio_
+
+
+plt.subplot(1, 2, 1)
+plt.plot(np.linspace(1, len(PVE), len(PVE)), PVE, label='Raw PVE')
+plt.plot(np.linspace(1, len(scaled_PVE), len(scaled_PVE)), scaled_PVE, label='Normalized PVE')
+plt.xlabel('Principal component')
+plt.ylabel('Prop. Variance Explained')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(np.linspace(1, len(PVE), len(PVE)), np.cumsum(PVE), label='Raw PVE')
+plt.plot(np.linspace(1, len(scaled_PVE), len(scaled_PVE)), np.cumsum(scaled_PVE), label='Normalized PVE')
+plt.xlabel('Principal component')
+plt.ylabel('Cumulative Prop. Variance Explained')
+
+plt.legend()
+plt.show()
+
+```
 
 ## Task c
 ![PVE and cumulative PVE](../static/E3P20C.png)
@@ -339,4 +584,56 @@ When changing the dimensionality the the accuracy for PCA varies for lower value
 
 ![Changing dimensionality](../static/E3P20C2.png)
 
-Where the x axis is dimensionality and y is accuracy.
+Where the x axis is dimensionality and y is accuracy. The accuracy peaks around 4 dimensions.
+
+### Code
+The first plot showing the PVE and cumulative PVE is made with teh same code as in task B.
+```python
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier as RF
+from sklearn.neighbors import KNeighborsClassifier as KNN
+from sklearn.linear_model import LogisticRegression as LR
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+
+scaler = StandardScaler(with_mean=True, with_std=True)
+
+df = pd.read_csv('data/train.csv')
+X = df.filter(regex=r'\.mean$')
+y = df['class4']
+
+trainX, validX, train_y, valid_y = train_test_split(X, y, test_size=0.5, random_state=1)
+scaledX = scaler.fit_transform(X)
+
+knn = KNN(n_neighbors=1)
+knn.fit(trainX, train_y)
+
+print('1-NN accuracy', accuracy_score(valid_y, knn.predict(validX)))
+
+accuracies = np.array([])
+
+for d in range(2, 51):
+    pca = PCA(n_components=d)
+    scores = pca.fit_transform(scaledX)
+    pcaX = pd.DataFrame(scores, columns=[f"PC{i+1}" for i in range(scores.shape[1])])
+
+    pcaTrainX, pcaValidX, pcaTrain_y, pcaValid_y = train_test_split(pcaX, y, test_size=0.5, random_state=1)
+
+    knn.fit(pcaTrainX, pcaTrain_y)
+    accuracies= np.append(accuracies, accuracy_score(pcaValid_y, knn.predict(pcaValidX)))
+    if d == 4:
+        print('1-NN accuracy with PCA', accuracy_score(pcaValid_y, knn.predict(pcaValidX)))
+
+plt.plot(np.linspace(2, 50, 49), accuracies)
+plt.show()
+```
+
+# Problem 21
+From this exercise set I got an idea of how to start my project. I noticed that when performing principal component analysis on the dataset, the nonevent datapoitns follow a curve pretty nicely. Another thing I learn was during peer reviewing I noticed my submission was missing plots that I know I had made. Aparntly the markdown to pdf converter I used does not support images within tables.
+
+Estimated work hours: 15

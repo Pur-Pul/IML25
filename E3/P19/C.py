@@ -11,6 +11,7 @@ scaler = StandardScaler(with_mean=True, with_std=True)
 
 X = scaler.fit_transform(trainDF.filter(regex=r'\.mean$'))
 
+## I
 losses = np.array([])
 
 for i in range (0, 1000):
@@ -26,6 +27,8 @@ plt.ylabel('count')
 plt.title('random')
 plt.show()
 
+
+## II
 losses = np.array([])
 
 for i in range (0, 1000):
