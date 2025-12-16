@@ -3,3 +3,4 @@ data
 models
 .venv
 peer_reviews
+*__pycache__
