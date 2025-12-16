@@ -1,0 +1,98 @@
+from sklearn.feature_selection import SequentialFeatureSelector
+from sklearn.linear_model import LogisticRegression as LR
+from sklearn.svm import SVC
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA, QuadraticDiscriminantAnalysis as QDA
+from sklearn.neighbors import KNeighborsClassifier as KNN
+from sklearn.ensemble import RandomForestClassifier as RF
+import matplotlib.pyplot as plt
+from sklearn.pipeline import Pipeline
+from ISLP.models import Stepwise, sklearn_selected, sklearn_selection_path
+
+scaler = StandardScaler(with_mean=True, with_std=True)
+le = LabelEncoder()
+
+trainDF = pd.read_csv('data/train.csv')
+class2 = (trainDF['class4'] != 'nonevent').astype(int)
+class4 = le.fit_transform(trainDF['class4'])
+
+classMap = {
+    'nonevent' : np.where(le.classes_ == 'nonevent')[0][0],
+    'II' : np.where(le.classes_ == 'II')[0][0],
+    'Ia' : np.where(le.classes_ == 'Ia')[0][0],
+    'Ib' : np.where(le.classes_ == 'Ib')[0][0]
+}
+
+X = trainDF.drop(columns=['date', 'id', 'class4'])
+scaledX = pd.DataFrame(scaler.fit_transform(X), columns = X.columns)
+
+eventX = scaledX[class4 != classMap['nonevent']]
+events = class4[class4 != classMap['nonevent']]
+
+
+scores = np.array([])
+
+model = SVC()#KNN(n_neighbors=7, weights='distance')
+sfs = SequentialFeatureSelector(
+    model,
+    direction='forward',
+    scoring='accuracy',
+    cv=10,
+    n_jobs=-1
+)
+
+sfs.fit(eventX, events)
+selected_features = scaledX.columns[sfs.get_support()]
+print(selected_features)
+score = cross_val_score(model, eventX[selected_features], events, cv=10).mean()
+print(score)
+'''
+for k in range(1, 11):
+    models = KNN(n_neighbors=k, weights='distance')
+    sfs = SequentialFeatureSelector(
+        models,
+        direction='forward',
+        scoring='accuracy',
+        cv=10,
+        n_jobs=-1
+    )
+
+    sfs.fit(eventX, events)
+    selected_features = scaledX.columns[sfs.get_support()]
+
+    score = cross_val_score(models, eventX[selected_features], events, cv=10).mean()
+    print(k, score)
+    scores = np.append(scores, score)
+
+plt.plot(np.linspace(1, 10, 10), scores)
+
+#plt.scatter(eventX[selected_features[0]], eventX[selected_features[1]], color=np.where(events == classMap['II'], 'r', np.where(events == classMap['Ia'], 'g',  'b')))
+plt.show()
+
+'''
+
+#for i in range (2, p):    
+#    sfs = SequentialFeatureSelector(
+#        model,
+#        n_features_to_select=i,
+#        direction='forward',
+#        scoring='accuracy',
+#        cv=10,
+#        n_jobs=-1
+#    )
+
+#    sfs.fit(eventX, events)
+#    selected_features = scaledX.columns[sfs.get_support()]
+#    score = cross_val_score(model, eventX[selected_features], events, cv=10).mean()
+#    accuracy = np.append(accuracy, score)
+
+    #print(i, score)
+
+#plt.plot(np.linspace(2, p, p), accuracy)
+
+#plt.scatter(eventX[selected_features[0]], eventX[selected_features[1]], color=np.where(events == classMap['II'], 'r', np.where(events == classMap['Ia'], 'g',  'b')))
+#plt.show()
