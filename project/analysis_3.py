@@ -48,9 +48,6 @@ class Model():
         self.class2_y[y != 'nonevent'] = 'event'
         self.class2LE.fit(self.class2_y)
 
-        #print(self.PCs)
-        #print(self.y)
-
         self.event_y = self.y[self.y != 'nonevent']
         self.eventX = self.PCs[self.y != 'nonevent']
         self.eventLE.fit(self.event_y)
@@ -79,7 +76,6 @@ class Model():
 
         event_preds = self.eventModel.predict(testPCs)
         event_labels = self.eventLE.inverse_transform(event_preds)
-        #print(event_labels)
 
         class2_preds = self.class2Model.predict(testPCs)
         class2_labels = self.class2LE.inverse_transform(class2_preds)
@@ -121,30 +117,38 @@ combined_score = np.array([])
 
 models1 = {
     'SVC': SVC(probability=True),
-    'LR': LR(),
+    'LR': LR(max_iter=500),
     'KNN': KNN(n_neighbors=8),
     'RF': RF()
 }
 
 models2 = {
     'SVC': SVC(probability=True),
-    'LR': LR(),
+    'LR': LR(max_iter=500),
     'KNN': KNN(n_neighbors=8),
     'RF': RF()
 }
-
+print(
+    '| class2 model',
+    'event model',
+    'Binary Accuracy',
+    'Perplexity',
+    'Multi-Class Accuracy',
+    'Combined Score',
+    sep=' | ',
+    end=' |\n'
+)
+print('|---|---|---|---|---|---|')
 for class2ModelName, class2Model in models1.items():
     for eventModelName, eventModel in models2.items():
-        print(f'{class2ModelName} {eventModelName}')
         for validChunkIndex in np.array_split(trainDF.index, 10):
             validChunk = trainDF.loc[validChunkIndex]
 
             trainChunk = trainDF.drop(validChunk.index.values)
             model = Model(4, class2Model, eventModel)
-            model.fit(trainChunk.filter(regex=r'\.mean$'), trainChunk['class4'])
+            model.fit(trainChunk.drop(columns=['date', 'id', 'class4']), trainChunk['class4'])
 
             preds, probs = model.predict(validChunk, return_probs=True)
-            #print(preds, probs)
 
             submission = pd.DataFrame({
                 'id': validChunk['id'].values,
@@ -160,16 +164,17 @@ for class2ModelName, class2Model in models1.items():
             perplexity = np.append(perplexity, perp)
             multi_class_accuracy = np.append(multi_class_accuracy, mult_c_acc)
             combined_score = np.append(combined_score, comb_score)
-
+        
         print(
-            f"Binary Accuracy = {binary_accuracy.mean():.5f}\n"
-            f"Perplexity = {perplexity.mean():.5f}\n"
-            f"Multi-Class Accuracy = {multi_class_accuracy.mean():.5f}\n"
-            f"Combined Score = {combined_score.mean():.5f}"
+            f'| {class2ModelName}',
+            eventModelName,
+            f'{binary_accuracy.mean():.5f}',
+            f'{perplexity.mean():.5f}',
+            f'{multi_class_accuracy.mean():.5f}',
+            f'{combined_score.mean():.5f}',
+            sep=' | ',
+            end=' |\n'
         )
-        print()
-
-    #assert len(chunk) == len(data) / 5,
 
 #model = Model(PCA_depth=4).fit(trainDF.filter(regex=r'\.mean$'), class4).predict_and_write(testDF, ids= testDF['id'])
 #print(cross_val_score(model, trainDF.drop(columns=['date', 'id', 'class4']), class4, cv=10).mean())
